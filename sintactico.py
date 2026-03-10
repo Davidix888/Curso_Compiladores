@@ -66,7 +66,7 @@ class Parser:
             instrucciones.append(self.sentencia_print())
 
         elif token[1] == 'println':
-            instrucciones.append(self.sentencia_print())
+            instrucciones.append(self.sentencia_println())
 
         elif token[1] == 'if':
             instrucciones.append(self.sentencia_if())
@@ -81,6 +81,7 @@ class Parser:
             instrucciones.append(self.asignacion())
 
     return instrucciones
+  
   def asignacion(self):
     #Gramática pra la estructura de asignación
     tipo = self.coincidir('KEYWORD') #Se espera un tipo
@@ -141,12 +142,93 @@ class Parser:
     return argumentos
  
   def sentencia_print(self):
-    self.coincidir('IDENTIFIER') # Se espera print
-    self.coincidir('DELIMITER') # Se espera (
+
+    self.coincidir('KEYWORD')      # print
+    self.coincidir('DELIMITER')    # (
+
     expresion = self.expresion()
-    self.coincidir('DELIMITER') # Se espera )
-    self.coincidir('DELIMITER') # Se espera ;
+
+    self.coincidir('DELIMITER')    # )
+    self.coincidir('DELIMITER')    # ;
+
     return NodoPrint(expresion)
+  
+  def sentencia_println(self):
+
+    self.coincidir('KEYWORD')      # println
+    self.coincidir('DELIMITER')    # (
+
+    expresion = self.expresion()
+
+    self.coincidir('DELIMITER')    # )
+    self.coincidir('DELIMITER')    # ;
+
+    return NodoPrintln(expresion)
+  
+  def sentencia_if(self):
+
+    self.coincidir('KEYWORD')      # if
+    self.coincidir('DELIMITER')    # (
+
+    condicion = self.expresion()
+
+    self.coincidir('DELIMITER')    # )
+
+    self.coincidir('DELIMITER')    # {
+    cuerpo_if = self.cuerpo()
+    self.coincidir('DELIMITER')    # }
+
+    cuerpo_else = None
+
+    if self.obtener_token() and self.obtener_token()[1] == 'else':
+
+        self.coincidir('KEYWORD')   # else
+        self.coincidir('DELIMITER') # {
+
+        cuerpo_else = self.cuerpo()
+
+        self.coincidir('DELIMITER') # }
+
+    return NodoIf(condicion, cuerpo_if, cuerpo_else)
+  
+  def sentencia_while(self):
+
+    self.coincidir('KEYWORD')      # while
+    self.coincidir('DELIMITER')    # (
+
+    condicion = self.expresion()
+
+    self.coincidir('DELIMITER')    # )
+
+    self.coincidir('DELIMITER')    # {
+    cuerpo = self.cuerpo()
+    self.coincidir('DELIMITER')    # }
+
+    return NodoWhile(condicion, cuerpo)
+  
+
+  def sentencia_for(self):
+
+    self.coincidir('KEYWORD')      # for
+    self.coincidir('DELIMITER')    # (
+
+    inicial = self.asignacion()
+    condicion = self.expresion()
+
+    self.coincidir('DELIMITER')    # ;
+
+    incremento = self.expresion()
+
+    self.coincidir('DELIMITER')    # )
+    self.coincidir('DELIMITER')    # {
+
+    cuerpo = self.cuerpo()
+
+    self.coincidir('DELIMITER')    # }
+
+    return NodoFor(inicial, condicion, incremento, cuerpo)
+  
+  
 
 def imprimir_ast(nodo):
     if isinstance(nodo, NodoFuncion):
@@ -170,6 +252,12 @@ def imprimir_ast(nodo):
     elif isinstance(nodo, NodoPrint):
       return {"Print" : imprimir_ast(nodo.expresion)}
     return {}
+
+
+
+
+
+
 
 
 
